@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ns-sebastian-jerez
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-sebastian-jerez
+  namespace: ns-sebastian-jerez
+data:
+  AMBIENTE: "LABORATORIO-3"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret-sebastian-jerez
+  namespace: ns-sebastian-jerez
+type: Opaque
+stringData:
+  API_KEY: "api-key-sebastian-jerez"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-sebastian-jerez
+  namespace: ns-sebastian-jerez
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: app-sebastian-jerez
+  template:
+    metadata:
+      labels:
+        app: app-sebastian-jerez
+    spec:
+      containers:
+        - name: app-sebastian-jerez
+          image: sebasdockers/tarea-final:sebastian-jerez
+          ports:
+            - containerPort: 3000
+          env:
+            - name: AMBIENTE
+              valueFrom:
+                configMapKeyRef:
+                  name: config-sebastian-jerez
+                  key: AMBIENTE
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: secret-sebastian-jerez
+                  key: API_KEY
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-sebastian-jerez
+  namespace: ns-sebastian-jerez
+spec:
+  type: ClusterIP
+  selector:
+    app: app-sebastian-jerez
+  ports:
+    - port: 80
+      targetPort: 3000
